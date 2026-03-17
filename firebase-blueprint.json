@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "Cliente": {
+      "title": "Cliente",
+      "description": "Cadastro de clientes e contratantes",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "telefone": { "type": "string" },
+        "email": { "type": "string" },
+        "cpf": { "type": "string" },
+        "endereco": { "type": "string" },
+        "dataCadastro": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nome", "telefone"]
+    },
+    "Reuniao": {
+      "title": "Reunião",
+      "description": "Agendamento de reuniões com clientes",
+      "type": "object",
+      "properties": {
+        "data": { "type": "string" },
+        "horario": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "tipoEvento": { "type": "string" },
+        "duracao": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["data", "horario", "clienteId", "tipoEvento"]
+    },
+    "Show": {
+      "title": "Show",
+      "description": "Evento confirmado da banda",
+      "type": "object",
+      "properties": {
+        "nomeEvento": { "type": "string" },
+        "dataEvento": { "type": "string", "format": "date-time" },
+        "duracao": { "type": "string" },
+        "statusEvento": { "type": "string" }
+      },
+      "required": ["nomeEvento", "dataEvento", "statusEvento"]
+    }
+  },
+  "firestore": {
+    "/clientes/{clienteId}": {
+      "schema": "Cliente",
+      "description": "Coleção de clientes"
+    },
+    "/reunioes/{reuniaoId}": {
+      "schema": "Reuniao",
+      "description": "Coleção de reuniões"
+    },
+    "/shows/{showId}": {
+      "schema": "Show",
+      "description": "Coleção de shows"
+    },
+    "/integrantes/{integranteId}": {
+      "schema": "object",
+      "description": "Coleção de integrantes da banda"
+    }
+  }
+}
