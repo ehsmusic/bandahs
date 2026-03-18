@@ -272,7 +272,7 @@ export const ReuniaoDetails = () => {
         // Criar documento no Firebase
         await addDoc(collection(db, 'reunioes', id, 'documentos'), {
           dataUpload: serverTimestamp(),
-          nomeDocumento: `${reuniao.nomeEvento}.pdf`,
+          nomeDocumento: `Orçamento - ${reuniao.nomeEvento}.pdf`,
           tipoDocumento: 'PDF',
           urlArquivo: result.urlArquivo || ''
         });

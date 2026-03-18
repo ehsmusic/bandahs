@@ -64,6 +64,17 @@ export const ShowDetails = () => {
   const [editingDoc, setEditingDoc] = useState<DocumentoShow | null>(null);
   const [heleModal, setHeleModal] = useState<{ isOpen: boolean; message: string }>({ isOpen: false, message: '' });
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const { data: todosIntegrantes } = useFirestoreCollection<Integrante>('integrantes');
   const { data: todosClientes } = useFirestoreCollection<Cliente>('clientes');
 
@@ -290,7 +301,7 @@ export const ShowDetails = () => {
         // Criar documento no Firebase
         await addDoc(collection(db, 'shows', id, 'documentos'), {
           dataUpload: serverTimestamp(),
-          nomeDocumento: `${show.nomeEvento}.pdf`,
+          nomeDocumento: `Orçamento - ${show.nomeEvento}.pdf`,
           tipoDocumento: 'PDF',
           urlArquivo: result.urlArquivo || '' // Usar o campo correto retornado pelo webhook
         });
@@ -363,9 +374,19 @@ export const ShowDetails = () => {
       });
       
       if (response.ok) {
+        const result = await response.json();
+        
+        // Criar documento no Firebase
+        await addDoc(collection(db, 'shows', id, 'documentos'), {
+          dataUpload: serverTimestamp(),
+          nomeDocumento: `Contrato - ${show.nomeEvento}.pdf`,
+          tipoDocumento: 'Contrato',
+          urlArquivo: result.urlArquivo || ''
+        });
+
         setHeleModal({
           isOpen: true,
-          message: "Olá! O contrato foi gerado com sucesso e enviado para processamento!"
+          message: "Olá! Acabei de enviar o contrato para o sistema. O documento foi gerado e salvo na seção de documentos deste show!"
         });
         setIsContractModalOpen(false);
       } else {
@@ -432,12 +453,20 @@ export const ShowDetails = () => {
   };
 
   const deleteDocItem = async (docId: string) => {
-    if (!id || !window.confirm("Excluir este documento permanentemente?")) return;
-    try {
-      await deleteDoc(doc(db, 'shows', id, 'documentos', docId));
-    } catch (error) {
-      console.error("Erro ao excluir documento:", error);
-    }
+    if (!id) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Excluir Documento',
+      message: 'Deseja realmente excluir este documento permanentemente?',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'shows', id, 'documentos', docId));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error("Erro ao excluir documento:", error);
+        }
+      }
+    });
   };
 
   const onAddParcela = async (data: any) => {
@@ -492,12 +521,20 @@ export const ShowDetails = () => {
   };
 
   const deleteParcela = async (parcelaId: string) => {
-    if (!id || !window.confirm("Excluir esta parcela?")) return;
-    try {
-      await deleteDoc(doc(db, 'shows', id, 'parcelas', parcelaId));
-    } catch (error) {
-      console.error("Erro ao excluir parcela:", error);
-    }
+    if (!id) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Excluir Parcela',
+      message: 'Deseja realmente excluir esta parcela?',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'shows', id, 'parcelas', parcelaId));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error("Erro ao excluir parcela:", error);
+        }
+      }
+    });
   };
 
   // Atualizar valor total pago no financeiro geral
@@ -520,12 +557,20 @@ export const ShowDetails = () => {
   }, [id, parcelas]);
 
   const removeMember = async (memberId: string) => {
-    if (!id || !window.confirm("Remover integrante deste show?")) return;
-    try {
-      await deleteDoc(doc(db, 'shows', id, 'equipe', memberId));
-    } catch (error) {
-      console.error("Erro ao remover integrante:", error);
-    }
+    if (!id) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remover Integrante',
+      message: 'Deseja realmente remover este integrante deste show?',
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'shows', id, 'equipe', memberId));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error("Erro ao remover integrante:", error);
+        }
+      }
+    });
   };
 
   if (!show) return <div className="p-10 text-center text-slate-500">Carregando detalhes do show...</div>;
@@ -1217,6 +1262,33 @@ export const ShowDetails = () => {
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20"
               >
                 Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação Genérico */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 p-6 text-center">
+            <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{confirmModal.title}</h3>
+            <p className="text-slate-500 mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                className="flex-1 py-3 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition-all text-slate-700"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmModal.onConfirm}
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-600/20"
+              >
+                Excluir
               </button>
             </div>
           </div>
