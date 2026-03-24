@@ -22,16 +22,16 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: s
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm"
+    className="bg-white border border-slate-200 p-4 md:p-6 rounded-2xl shadow-sm"
   >
-    <div className="flex items-center justify-between mb-4">
-      <div className={cn("p-3 rounded-xl bg-opacity-10", color)}>
-        <Icon className={color.replace('bg-', 'text-')} size={24} />
+    <div className="flex items-center justify-between mb-3 md:mb-4">
+      <div className={cn("p-2 md:p-3 rounded-xl bg-opacity-10", color)}>
+        <Icon className={color.replace('bg-', 'text-')} size={20} />
       </div>
-      <TrendingUp className="text-emerald-500" size={16} />
+      <TrendingUp className="text-emerald-500" size={14} />
     </div>
-    <p className="text-slate-500 text-sm font-medium">{title}</p>
-    <h3 className="text-2xl font-bold mt-1">{value}</h3>
+    <p className="text-slate-500 text-xs md:text-sm font-medium">{title}</p>
+    <h3 className="text-xl md:text-2xl font-bold mt-1">{value}</h3>
   </motion.div>
 );
 
@@ -161,12 +161,12 @@ export const Dashboard = () => {
           <p className="text-slate-400 mt-1">Bem-vindo ao centro de comando da sua banda.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider px-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200 w-full md:w-auto">
+          <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-wider px-2">
             <Filter size={14} /> Filtros
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select 
               value={isCustomDate ? 'custom' : 'month'}
               onChange={(e) => setIsCustomDate(e.target.value === 'custom')}
@@ -189,53 +189,53 @@ export const Dashboard = () => {
                   type="date" 
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-900"
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-900 w-28"
                 />
                 <span className="text-slate-400 text-[10px] font-bold uppercase">até</span>
                 <input 
                   type="date" 
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-900"
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-900 w-28"
                 />
               </div>
             )}
+
+            <select 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
+            >
+              <option value="Todos">Tipos</option>
+              <option value="Casamento">Casamento</option>
+              <option value="Formatura">Formatura</option>
+              <option value="Aniversário">Aniversário</option>
+              <option value="Confraternização">Confraternização</option>
+              <option value="Corporativo">Corporativo</option>
+              <option value="Outros">Outros</option>
+            </select>
+
+            <select 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
+            >
+              <option value="Todos">Status</option>
+              <option value="Confirmado">Confirmado</option>
+              <option value="Em negociação">Em negociação</option>
+              <option value="Realizado">Realizado</option>
+              <option value="Finalizado">Finalizado</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+
+            <button 
+              onClick={resetFilters}
+              className="p-2 text-slate-400 hover:text-slate-900 transition-all ml-auto sm:ml-0"
+              title="Limpar Filtros"
+            >
+              <X size={18} />
+            </button>
           </div>
-
-          <select 
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
-          >
-            <option value="Todos">Todos os Tipos</option>
-            <option value="Casamento">Casamento</option>
-            <option value="Formatura">Formatura</option>
-            <option value="Aniversário">Aniversário</option>
-            <option value="Confraternização">Confraternização</option>
-            <option value="Corporativo">Corporativo</option>
-            <option value="Outros">Outros</option>
-          </select>
-
-          <select 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
-          >
-            <option value="Todos">Todos os Status</option>
-            <option value="Confirmado">Confirmado</option>
-            <option value="Em negociação">Em negociação</option>
-            <option value="Realizado">Realizado</option>
-            <option value="Finalizado">Finalizado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-
-          <button 
-            onClick={resetFilters}
-            className="p-2 text-slate-400 hover:text-slate-900 transition-all"
-            title="Limpar Filtros"
-          >
-            <X size={18} />
-          </button>
         </div>
       </header>
 

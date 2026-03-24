@@ -85,10 +85,10 @@ export const Integrantes = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Integrantes</h1>
-          <p className="text-slate-500 mt-1">Gerencie a equipe e músicos da banda.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Integrantes</h1>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Gerencie a equipe e músicos da banda.</p>
         </div>
         <button 
           onClick={() => { 
@@ -102,7 +102,7 @@ export const Integrantes = () => {
             }); 
             setIsModalOpen(true); 
           }}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto"
         >
           <Plus size={20} />
           Novo Integrante

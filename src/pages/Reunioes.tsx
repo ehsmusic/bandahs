@@ -228,14 +228,14 @@ export const Reunioes = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Reuniões</h1>
-          <p className="text-slate-500 mt-1">Acompanhe negociações e agendamentos.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Reuniões</h1>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Acompanhe negociações e agendamentos.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20 w-full sm:w-auto"
         >
           <Plus size={20} />
           Agendar Reunião
@@ -243,13 +243,13 @@ export const Reunioes = () => {
       </header>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm">
+      <div className="flex flex-wrap gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 w-full sm:w-fit shadow-sm overflow-x-auto scrollbar-hide">
         {['Ativas', 'Agendada', 'Em andamento', 'Em espera', 'Realizada', 'Cancelada', 'Todas'].map((status) => (
           <button
             key={status}
             onClick={() => setFilterStatus(status)}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-bold transition-all",
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
               filterStatus === status 
                 ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"

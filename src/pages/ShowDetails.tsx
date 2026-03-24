@@ -16,7 +16,8 @@ import {
   Upload,
   ExternalLink,
   Edit2,
-  XCircle
+  XCircle,
+  ChevronDown
 } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, query, where, serverTimestamp, Timestamp, addDoc } from 'firebase/firestore';
@@ -28,11 +29,11 @@ const TabButton = ({ active, onClick, icon: Icon, label }: { active: boolean, on
   <button 
     onClick={onClick}
     className={cn(
-      "flex items-center gap-2 px-6 py-4 border-b-2 transition-all font-semibold text-sm",
+      "flex items-center gap-2 px-3 md:px-6 py-3 md:py-4 border-b-2 transition-all font-semibold text-xs md:text-sm whitespace-nowrap",
       active ? "border-emerald-500 text-emerald-500 bg-emerald-500/5" : "border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50"
     )}
   >
-    <Icon size={18} />
+    <Icon size={16} className="md:w-[18px] md:h-[18px]" />
     {label}
   </button>
 );
@@ -85,29 +86,33 @@ export const ShowDetails = () => {
 
   // Fetch Show Data
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof id !== 'string') return;
+    
     const unsubShow = onSnapshot(doc(db, 'shows', id), (docSnap) => {
       if (docSnap.exists()) {
         const showData = { id: docSnap.id, ...docSnap.data() } as Show;
         setShow(showData);
-        
-        // Fetch Cliente
-        onSnapshot(doc(db, 'clientes', showData.clienteId), (cSnap) => {
-          if (cSnap.exists()) setCliente({ id: cSnap.id, ...cSnap.data() } as Cliente);
-        });
       }
+    }, (error) => {
+      console.error("Erro ao buscar show:", error);
     });
 
     const unsubEquipe = onSnapshot(collection(db, 'shows', id, 'equipe'), (snap) => {
       setEquipe(snap.docs.map(d => ({ id: d.id, ...d.data() } as EquipeShow)));
+    }, (error) => {
+      console.error("Erro ao buscar equipe:", error);
     });
 
     const unsubDocs = onSnapshot(collection(db, 'shows', id, 'documentos'), (snap) => {
       setDocumentos(snap.docs.map(d => ({ id: d.id, ...d.data() } as DocumentoShow)));
+    }, (error) => {
+      console.error("Erro ao buscar documentos:", error);
     });
 
     const unsubParcelas = onSnapshot(collection(db, 'shows', id, 'parcelas'), (snap) => {
       setParcelas(snap.docs.map(d => ({ id: d.id, ...d.data() } as ParcelaFinanceira)));
+    }, (error) => {
+      console.error("Erro ao buscar parcelas:", error);
     });
 
     return () => {
@@ -117,6 +122,27 @@ export const ShowDetails = () => {
       unsubParcelas();
     };
   }, [id]);
+
+  // Fetch Cliente Data
+  useEffect(() => {
+    if (!show?.clienteId || typeof show.clienteId !== 'string') {
+      setCliente(null);
+      return;
+    }
+
+    const unsub = onSnapshot(doc(db, 'clientes', show.clienteId), (cSnap) => {
+      if (cSnap.exists()) {
+        setCliente({ id: cSnap.id, ...cSnap.data() } as Cliente);
+      } else {
+        console.warn("Cliente não encontrado:", show.clienteId);
+        setCliente(null);
+      }
+    }, (error) => {
+      console.error("Erro ao buscar cliente:", error);
+    });
+
+    return () => unsub();
+  }, [show?.clienteId]);
 
   // Fetch Related Meetings
   useEffect(() => {
@@ -264,7 +290,12 @@ export const ShowDetails = () => {
   };
 
   const handleGerarOrcamentoShow = async () => {
-    if (!show || !cliente) return;
+    if (!id || !show || !cliente) {
+      alert("Dados do show ou do cliente não carregados. Verifique se o show possui um cliente vinculado.");
+      return;
+    }
+    
+    console.log("Iniciando geração de orçamento para show:", id);
     
     const dataEvento = show.dataEvento instanceof Timestamp 
       ? format(show.dataEvento.toDate(), 'dd/MM/yyyy')
@@ -288,6 +319,8 @@ export const ShowDetails = () => {
       publicoEstimado: show.publicoEstimado || 0
     };
 
+    console.log("Enviando payload para orçamento:", payload);
+
     try {
       const response = await fetch('https://webhook.ehstech.com.br/webhook/orcamentoHS', {
         method: 'POST',
@@ -295,8 +328,11 @@ export const ShowDetails = () => {
         body: JSON.stringify(payload)
       });
       
+      console.log("Resposta do webhook orçamento:", response.status);
+
       if (response.ok) {
         const result = await response.json();
+        console.log("Resultado do webhook orçamento:", result);
         
         // Criar documento no Firebase
         await addDoc(collection(db, 'shows', id, 'documentos'), {
@@ -311,36 +347,46 @@ export const ShowDetails = () => {
           message: "Olá! Acabei de enviar o orçamento deste show para o sistema. O documento foi gerado e salvo na aba Documentos!"
         });
       } else {
-        alert("Erro ao enviar orçamento. Tente novamente.");
+        const errorText = await response.text();
+        console.error("Erro no webhook orçamento:", errorText);
+        alert(`Erro ao gerar orçamento (Status ${response.status}). Tente novamente.`);
       }
     } catch (error) {
-      console.error("Erro no webhook:", error);
-      alert("Erro de conexão ao enviar orçamento.");
+      console.error("Erro no webhook orçamento:", error);
+      alert(`Erro de conexão ao enviar orçamento: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
-  const canGenerateContract = () => {
-    if (!show || !cliente) return false;
+  const getContractStatus = () => {
+    if (!show || !cliente) return { can: false, missing: ['Dados do show ou cliente não carregados'] };
     
-    const requiredFields = [
-      cliente.nome,
-      cliente.cpf,
-      cliente.endereco,
-      cliente.telefone,
-      show.dataEvento,
-      show.cidade,
-      show.endereco || show.local,
-      show.horarioEvento,
-      show.duracao,
-      show.valorContrato,
-      show.nomeEvento
+    const fields = [
+      { name: 'Nome do Cliente', value: cliente.nome },
+      { name: 'CPF/CNPJ do Cliente', value: cliente.cpf },
+      { name: 'Endereço do Cliente', value: cliente.endereco },
+      { name: 'Telefone do Cliente', value: cliente.telefone },
+      { name: 'Data do Evento', value: show.dataEvento },
+      { name: 'Cidade', value: show.cidade },
+      { name: 'Local/Endereço do Evento', value: show.endereco || show.local },
+      { name: 'Horário do Evento', value: show.horarioEvento },
+      { name: 'Duração', value: show.duracao },
+      { name: 'Valor do Contrato', value: show.valorContrato },
+      { name: 'Nome do Evento', value: show.nomeEvento }
     ];
 
-    return requiredFields.every(field => field !== undefined && field !== null && field !== '');
+    const missing = fields.filter(f => {
+      if (f.value === undefined || f.value === null || f.value === '') return true;
+      if (f.name === 'Valor do Contrato' && (f.value === 0 || f.value === '0')) return true;
+      return false;
+    }).map(f => f.name);
+
+    return { can: missing.length === 0, missing };
   };
 
   const handleGerarContrato = async () => {
-    if (!show || !cliente) return;
+    if (!id || !show || !cliente) return;
+    
+    console.log("Iniciando geração de contrato para show:", id);
     
     const dataEvento = show.dataEvento instanceof Timestamp 
       ? format(show.dataEvento.toDate(), 'dd/MM/yyyy')
@@ -366,6 +412,8 @@ export const ShowDetails = () => {
       tituloEvento: show.nomeEvento
     };
 
+    console.log("Enviando payload para contrato:", payload);
+
     try {
       const response = await fetch('https://webhook.ehstech.com.br/webhook/contrato_hs', {
         method: 'POST',
@@ -373,8 +421,11 @@ export const ShowDetails = () => {
         body: JSON.stringify(payload)
       });
       
+      console.log("Resposta do webhook contrato:", response.status);
+
       if (response.ok) {
         const result = await response.json();
+        console.log("Resultado do webhook contrato:", result);
         
         // Criar documento no Firebase
         await addDoc(collection(db, 'shows', id, 'documentos'), {
@@ -390,11 +441,13 @@ export const ShowDetails = () => {
         });
         setIsContractModalOpen(false);
       } else {
-        alert("Erro ao gerar contrato. Tente novamente.");
+        const errorText = await response.text();
+        console.error("Erro no webhook contrato:", errorText);
+        alert(`Erro ao gerar contrato (Status ${response.status}). Tente novamente.`);
       }
     } catch (error) {
       console.error("Erro no webhook de contrato:", error);
-      alert("Erro de conexão ao gerar contrato.");
+      alert(`Erro de conexão ao gerar contrato: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -590,23 +643,23 @@ export const ShowDetails = () => {
             <span className="text-slate-300">/</span>
             <span className="text-emerald-600 font-bold">{show.nomeEvento}</span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900">{show.nomeEvento}</h1>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-900">{show.nomeEvento}</h1>
           <div className="flex flex-wrap gap-4 text-slate-500 text-sm">
             <span className="flex items-center gap-1.5"><Calendar size={16} /> {format(date, "dd/MM/yyyy")}</span>
             <span className="flex items-center gap-1.5"><Clock size={16} /> {show.horarioEvento}</span>
             <span className="flex items-center gap-1.5"><MapPin size={16} /> {show.local}</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
           <button 
             onClick={handleEdit}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm w-full sm:w-auto"
           >
             <Edit2 size={18} />
             Editar Show
           </button>
           <span className={cn(
-            "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest",
+            "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-center",
             show.statusEvento === 'Confirmado' ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-100 text-slate-500"
           )}>
             {show.statusEvento}
@@ -615,26 +668,46 @@ export const ShowDetails = () => {
       </header>
 
       <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-        <nav className="flex border-b border-slate-100 overflow-x-auto">
+        <div className="md:hidden p-4 border-b border-slate-100 bg-slate-50/50">
+          <label htmlFor="tab-select" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Navegação</label>
+          <div className="relative">
+            <select 
+              id="tab-select"
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none"
+            >
+              <option value="equipe">Equipe</option>
+              <option value="reunioes">Reuniões</option>
+              <option value="documentos">Documentos</option>
+              <option value="financeiro">Financeiro</option>
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <ChevronDown size={18} />
+            </div>
+          </div>
+        </div>
+
+        <nav className="hidden md:flex border-b border-slate-100 overflow-x-auto">
           <TabButton active={activeTab === 'equipe'} onClick={() => setActiveTab('equipe')} icon={Users} label="Equipe" />
           <TabButton active={activeTab === 'reunioes'} onClick={() => setActiveTab('reunioes')} icon={Calendar} label="Reuniões" />
           <TabButton active={activeTab === 'documentos'} onClick={() => setActiveTab('documentos')} icon={FileText} label="Documentos" />
           <TabButton active={activeTab === 'financeiro'} onClick={() => setActiveTab('financeiro')} icon={DollarSign} label="Financeiro" />
         </nav>
 
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {activeTab === 'equipe' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-bold text-slate-900">Equipe do Show</h3>
-                  <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <h3 className="text-lg md:text-xl font-bold text-slate-900">Equipe do Show</h3>
+                  <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold border border-emerald-500/20 w-fit">
                     Total Confirmado: R$ {totalCachesConfirmados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <button 
                   onClick={() => setIsAddMemberModalOpen(true)}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto"
                 >
                   <Plus size={18} /> Adicionar Integrante
                 </button>
@@ -738,25 +811,44 @@ export const ShowDetails = () => {
 
           {activeTab === 'documentos' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-slate-900">Documentos e Arquivos</h3>
-                <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900">Documentos e Arquivos</h3>
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                   <button 
                     onClick={handleGerarOrcamentoShow}
-                    className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
+                    className="flex-1 sm:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
                   >
                     <ExternalLink size={18} /> Gerar Orçamento
                   </button>
-                  {canGenerateContract() && (
-                    <button 
-                      onClick={() => setIsContractModalOpen(true)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
-                    >
-                      <FileText size={18} /> Gerar Contrato
-                    </button>
-                  )}
-                  <label className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-blue-600/20">
-                    <Upload size={18} /> Upload Cloudinary
+                  {(() => {
+                    const status = getContractStatus();
+                    return (
+                      <div className="relative group flex-1 sm:flex-none">
+                        <button 
+                          onClick={() => status.can ? setIsContractModalOpen(true) : null}
+                          disabled={!status.can}
+                          className={cn(
+                            "w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg",
+                            status.can 
+                              ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20" 
+                              : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                          )}
+                        >
+                          <FileText size={18} /> Gerar Contrato
+                        </button>
+                        {!status.can && (
+                          <div className="absolute bottom-full mb-2 right-0 w-64 p-3 bg-slate-900 text-white text-[10px] md:text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                            <p className="font-bold mb-1">Campos obrigatórios faltando:</p>
+                            <ul className="list-disc list-inside">
+                              {status.missing.map(m => <li key={m}>{m}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <label className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-blue-600/20">
+                    <Upload size={18} /> Upload
                     <input type="file" className="hidden" onChange={handleFileUpload} />
                   </label>
                 </div>
@@ -820,11 +912,11 @@ export const ShowDetails = () => {
                     onClick={() => setIsAddParcelaModalOpen(true)}
                     className="text-emerald-600 text-sm font-bold flex items-center gap-1 hover:underline"
                   >
-                    <Plus size={16} /> Adicionar Parcela
+                    <Plus size={16} /> Adicionar
                   </button>
                 </div>
-                <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                  <table className="w-full text-left text-sm">
+                <div className="bg-white rounded-2xl overflow-x-auto border border-slate-200 shadow-sm">
+                  <table className="w-full text-left text-sm min-w-[600px]">
                     <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200">
                       <tr>
                         <th className="px-6 py-3">Valor</th>

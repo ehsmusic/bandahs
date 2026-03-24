@@ -91,14 +91,14 @@ export const Clientes = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Clientes</h1>
-          <p className="text-slate-500 mt-1">Gerencie sua base de contatos e contratantes.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Clientes</h1>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Gerencie sua base de contatos e contratantes.</p>
         </div>
         <button 
           onClick={() => { setEditingCliente(null); reset(); setIsModalOpen(true); }}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto"
         >
           <UserPlus size={20} />
           Novo Cliente
@@ -118,7 +118,7 @@ export const Clientes = () => {
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[600px]">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                 <th className="px-6 py-4">Nome</th>

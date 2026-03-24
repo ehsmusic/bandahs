@@ -77,35 +77,40 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-50">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 z-50">
         <div className="flex items-center gap-2">
           <img 
             src="https://res.cloudinary.com/dvq0tmbil/image/upload/v1768574843/Logo_HS_Metal_3D_cor_fundo_transparente_fnahvs.png" 
             alt="Logo" 
             className="w-8 h-8 object-contain"
           />
-          <span className="font-bold">Banda HS</span>
+          <span className="font-bold tracking-tight">Banda HS</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-500">
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+        >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-white z-40 pt-20 px-6">
-          <nav className="space-y-4">
+        <div className="lg:hidden fixed inset-0 bg-white z-40 pt-20 px-6 animate-in fade-in slide-in-from-top-4 duration-200">
+          <nav className="space-y-2">
             {menuItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-4 p-4 rounded-xl text-lg font-medium",
-                  location.pathname === item.to ? "bg-emerald-600 text-white" : "text-slate-500"
+                  "flex items-center gap-4 p-4 rounded-2xl text-lg font-semibold transition-all",
+                  location.pathname === item.to 
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" 
+                    : "text-slate-500 hover:bg-slate-50"
                 )}
               >
-                <item.icon size={24} />
+                <item.icon size={24} className={location.pathname === item.to ? "text-white" : "text-slate-400"} />
                 {item.label}
               </Link>
             ))}
@@ -114,7 +119,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-6 lg:p-10 pt-24 lg:pt-10 max-w-7xl mx-auto w-full">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 lg:p-10 pt-20 lg:pt-10 max-w-7xl mx-auto w-full">
         {children}
       </main>
     </div>

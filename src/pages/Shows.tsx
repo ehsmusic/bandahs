@@ -101,21 +101,21 @@ export const Shows = () => {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Shows</h1>
-          <p className="text-slate-500 mt-1">Gerencie todos os eventos confirmados da banda.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Shows</h1>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">Gerencie todos os eventos confirmados da banda.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 w-full sm:w-auto"
         >
           <Plus size={20} />
           Novo Show
         </button>
       </header>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
@@ -126,10 +126,10 @@ export const Shows = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-2 shadow-sm">
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-2 shadow-sm w-full sm:w-auto">
           <Filter size={18} className="text-slate-400" />
           <select 
-            className="bg-transparent outline-none text-sm font-medium"
+            className="bg-transparent outline-none text-sm font-medium w-full"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
@@ -161,10 +161,10 @@ export const Shows = () => {
             <Link 
               to={`/shows/${show.id}`} 
               key={show.id}
-              className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-emerald-500/50 transition-all group flex flex-col md:flex-row md:items-center gap-6 relative overflow-hidden shadow-sm"
+              className="bg-white border border-slate-200 rounded-2xl p-3 md:p-5 hover:border-emerald-500/50 transition-all group flex flex-col md:flex-row md:items-center gap-3 md:gap-6 relative overflow-hidden shadow-sm"
             >
               <div className={cn(
-                "absolute left-0 top-0 bottom-0 w-1.5",
+                "absolute left-0 top-0 bottom-0 w-1 md:w-1.5",
                 show.statusEvento === 'Confirmado' ? "bg-emerald-500" :
                 show.statusEvento === 'Realizado' ? "bg-blue-500" :
                 show.statusEvento === 'Cancelado' ? "bg-rose-500" :
@@ -172,58 +172,54 @@ export const Shows = () => {
                 "bg-slate-300"
               )} />
 
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-sm font-bold border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all ml-1">
-                <span className="text-emerald-600 text-xs">{format(date, 'dd/MM')}</span>
-                <span className="text-slate-500 text-[10px]">{format(date, 'yyyy')}</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-xs md:text-sm font-bold border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-all ml-1">
+                <span className="text-emerald-600 text-[10px] md:text-xs">{format(date, 'dd/MM')}</span>
+                <span className="text-slate-500 text-[8px] md:text-[10px]">{format(date, 'yyyy')}</span>
               </div>
 
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 space-y-0.5 md:space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-slate-900">{show.nomeEvento}</h3>
+                  <h3 className="text-base md:text-lg font-bold text-slate-900 leading-tight">{show.nomeEvento}</h3>
                   <span className={cn(
-                    "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest",
+                    "px-1.5 py-0.5 rounded-md text-[8px] md:text-[10px] font-black uppercase tracking-widest",
                     show.statusEvento === 'Confirmado' ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-500"
                   )}>
                     {show.statusEvento}
                   </span>
                 </div>
-                <p className="text-slate-600 text-sm font-medium">
-                  <span className="text-slate-400 text-xs font-normal">Contratante:</span> {cliente?.nome || 'Não informado'}
+                <p className="text-slate-600 text-xs md:text-sm font-medium">
+                  <span className="text-slate-400 text-[10px] md:text-xs font-normal">Contratante:</span> {cliente?.nome || 'Não informado'}
                 </p>
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500 pt-1">
-                  <span className="flex items-center gap-1.5"><Calendar size={14} className="text-emerald-600/70" /> {format(date, 'dd/MM/yyyy')}</span>
-                  <span className="flex items-center gap-1.5"><Clock size={14} className="text-emerald-600/70" /> {show.horarioEvento}</span>
-                  <span className="flex items-center gap-1.5"><MapPin size={14} className="text-emerald-600/70" /> {show.local} • {show.cidade}</span>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] md:text-xs text-slate-500 pt-0.5 md:pt-1">
+                  <span className="flex items-center gap-1"><Calendar size={12} className="text-emerald-600/70" /> {format(date, 'dd/MM/yyyy')}</span>
+                  <span className="flex items-center gap-1"><Clock size={12} className="text-emerald-600/70" /> {show.horarioEvento}</span>
+                  <span className="flex items-center gap-1"><MapPin size={12} className="text-emerald-600/70" /> {show.cidade}</span>
                 </div>
                 
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md text-[10px] text-slate-500 border border-slate-100">
-                    <Tag size={12} className="text-emerald-600/70" /> {show.tipoEvento}
+                <div className="flex flex-wrap gap-1 md:gap-2 pt-1 md:pt-2">
+                  <span className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] text-slate-500 border border-slate-100">
+                    <Tag size={10} className="text-emerald-600/70" /> {show.tipoEvento}
                   </span>
-                  <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md text-[10px] text-slate-500 border border-slate-100">
-                    <Users size={12} className="text-emerald-600/70" /> {show.publicoEstimado || 0} pessoas
+                  <span className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] text-slate-500 border border-slate-100">
+                    <Users size={10} className="text-emerald-600/70" /> {show.publicoEstimado || 0}
                   </span>
-                  <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md text-[10px] text-slate-500 border border-slate-100">
-                    <Volume2 size={12} className="text-emerald-600/70" /> 
-                    {show.somContratado ? 'Som HS Produções' : 'Som do Cliente'}
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md text-[10px] text-slate-500 border border-slate-100">
-                    <Utensils size={12} className="text-emerald-600/70" /> 
-                    {show.alimentacao ? 'Com Alimentação' : 'Sem Alimentação'}
+                  <span className="hidden sm:flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-md text-[9px] md:text-[10px] text-slate-500 border border-slate-100">
+                    <Volume2 size={10} className="text-emerald-600/70" /> 
+                    {show.somContratado ? 'Som HS' : 'Som Cliente'}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 ml-auto">
-                <div className="hidden md:flex flex-col items-end text-right">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contrato</span>
-                  <span className="text-sm font-bold text-slate-700">
+              <div className="flex items-center gap-3 md:gap-4 ml-auto">
+                <div className="flex flex-col items-end text-right">
+                  <span className="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contrato</span>
+                  <span className="text-xs md:text-sm font-bold text-slate-700">
                     {show.valorContrato 
                       ? `R$ ${show.valorContrato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
                       : 'R$ 0,00'}
                   </span>
                 </div>
-                <ChevronRight className="text-slate-300 group-hover:text-emerald-600 transition-all" />
+                <ChevronRight size={18} className="text-slate-300 group-hover:text-emerald-600 transition-all" />
               </div>
             </Link>
           );
